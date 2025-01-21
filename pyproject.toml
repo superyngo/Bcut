@@ -1,5 +1,5 @@
 [project]
-name = "uv-nuitka-textual-template"
+name = "BCut"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -11,6 +11,7 @@ dependencies = [
 [tool.uv]
 dev-dependencies = [
     "black>=24.10.0",
+    "mypy>=1.14.1",
     "nuitka>=2.4.8",
     "pre-commit>=4.0.1",
     "pytest>=8.3.3",

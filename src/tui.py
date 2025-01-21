@@ -2,6 +2,8 @@ from textual.app import App
 from textual.widgets import Input, Button, Header, Footer, Static
 from textual.containers import Container
 
+from app import ffmpeg_converter
+
 
 class HelloApp(App):
 
