@@ -1,8 +1,11 @@
-import os
+import sys, os
 from pathlib import Path
 from typing import LiteralString
 from enum import StrEnum, auto
-from ..types.types import PathEnum
+from ..utils.mytypes import PathEnum
+
+# Get the parent directory of the current
+runtime_pth = Path(os.path.abspath(sys.argv[0])).parent
 
 os.environ["HTTPS_PROXY"] = ""
 os.environ["HTTP_PROXY"] = ""
@@ -29,6 +32,7 @@ class Actions(StrEnum):
 
 # set app base path
 class AppPaths(PathEnum):
+    RUNTIME_PATH = runtime_pth
     PROGRAM_DATA = Path(os.environ["PROGRAMDATA"]) / APP_NAME  # C:\ProgramData
     APP_DATA = Path(os.environ["APPDATA"]) / APP_NAME  # C:\Users\user\AppData\Roaming
     CONFIG = APP_DATA / "config.conf"

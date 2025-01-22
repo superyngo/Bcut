@@ -1,7 +1,45 @@
 from types import MethodType
 from typing import TypeVar, Any, Protocol, Callable, TypedDict, NotRequired, Any, Type
+from ..logger import logger
 
-from .. import logger
+# Define a generic type T that is bound to object
+T = TypeVar("T", bound=object)
+
+
+def compose(obj: T, funcs: dict[str, Any], by_class: bool = False) -> int:
+    new_obj: type[T] | T = obj.__class__ if by_class else obj
+    for key, value in funcs.items():
+        match key:
+            case "__compose_init__":
+                MethodType(value, new_obj)()
+            case "__decompose__":
+                # Placeholder for future implementation
+                pass
+            case _:
+                setattr(
+                    new_obj,
+                    key,
+                    MethodType(value, new_obj) if callable(value) else value,
+                )
+        logger.info(f"{key} loaded successfully")
+    return 0
+
+
+def decompose(obj: T, funcs: dict[str, Any], by_class: bool = False) -> object:
+    new_obj: type[T] | T = obj.__class__ if by_class else obj
+    for key, value in funcs.items():
+        match key:
+            case "__compose_init__":
+                # Placeholder for future implementation
+                pass
+            case "__decompose__":
+                MethodType(value, new_obj)()
+            case _:
+                if hasattr(new_obj, key):
+                    delattr(new_obj, key)
+    logger.info(f"{key} removed successfully")  # type: ignore
+
+    return 0
 
 
 # class CsLoaderComponent:
@@ -320,42 +358,3 @@ from .. import logger
 
 #     # Create the class with type
 #     return type("_Cs", bases, {"__slots__": slots, "__init__": init})
-
-# Define a generic type T that is bound to object
-T = TypeVar("T", bound=object)
-
-
-def compose(obj: T, funcs: dict[str, Any], by_class: bool = False) -> int:
-    new_obj: type[T] | T = obj.__class__ if by_class else obj
-    for key, value in funcs.items():
-        match key:
-            case "__compose_init__":
-                MethodType(value, new_obj)()
-            case "__decompose__":
-                # Placeholder for future implementation
-                pass
-            case _:
-                setattr(
-                    new_obj,
-                    key,
-                    MethodType(value, new_obj) if callable(value) else value,
-                )
-        logger.info(f"{key} loaded successfully")
-    return 0
-
-
-def decompose(obj: T, funcs: dict[str, Any], by_class: bool = False) -> object:
-    new_obj: type[T] | T = obj.__class__ if by_class else obj
-    for key, value in funcs.items():
-        match key:
-            case "__compose_init__":
-                # Placeholder for future implementation
-                pass
-            case "__decompose__":
-                MethodType(value, new_obj)()
-            case _:
-                if hasattr(new_obj, key):
-                    delattr(new_obj, key)
-    logger.info(f"{key} removed successfully")
-
-    return 0

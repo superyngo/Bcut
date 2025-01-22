@@ -285,6 +285,9 @@ def jumpcut(
     return 0
 
 
+# not yet
+
+
 def convert(
     input_file: Path, output_file: Path | None, **othertags: EncodeKwargs
 ) -> int:
@@ -374,14 +377,11 @@ def cut(
     logger.info(f"{methods.CUT} {input_file} to {output_file} with {output_kwargs = }")
     try:
         # Re encode the video using ffmpeg-python
-        (
-            ffmpeg.input(str(input_file))
-            .output(str(temp_output_file), **output_kwargs)
-            .run()
-        )
+        command = f'ffmpeg -i "{input_file}" -ss {start_time} -to {end_time} -c copy "{temp_output_file}"'
+        os.system(command)
         temp_output_file.replace(output_file)
-    except ffmpeg.Error as e:
-        logger.error(f"Failed to cut videos for {input_file}. Error: {e.stderr}")
+    except Exception as e:
+        logger.error(f"Failed to cut videos for {input_file}. Error: {e}")
         raise e
     return 0
 
