@@ -2,16 +2,10 @@ import sys, os
 from pathlib import Path
 from typing import LiteralString
 from enum import StrEnum, auto
-from ..utils.mytypes import PathEnum
+from app.common.mytypes import PathEnum
 
-# Get the parent directory of the current
-runtime_pth = Path(os.path.abspath(sys.argv[0])).parent
 
-os.environ["HTTPS_PROXY"] = ""
-os.environ["HTTP_PROXY"] = ""
-os.environ["PYTHONUTF8"] = "1"
-
-__all__: list[str] = ["Actions", "AppPaths"]
+__all__: list[str] = ["Actions", "AppPaths", "APP_NAME"]
 
 
 # set app name
@@ -28,6 +22,10 @@ class Actions(StrEnum):
     CONVERTER = auto()
     SPEEDUP = auto()
     UPLOADER = auto()
+
+
+# Get the parent directory of the current app
+runtime_pth = Path(os.path.abspath(sys.argv[0])).parent
 
 
 # set app base path

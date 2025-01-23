@@ -1,6 +1,6 @@
 from types import MethodType
 from typing import TypeVar, Any, Protocol, Callable, TypedDict, NotRequired, Any, Type
-from ..logger import logger
+from app.common import logger
 
 # Define a generic type T that is bound to object
 T = TypeVar("T", bound=object)

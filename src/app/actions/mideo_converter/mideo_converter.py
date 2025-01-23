@@ -1,4 +1,4 @@
-from ...utils import logger
+from app.common import logger
 from ...services import ffmpeg_converter
 from .types import CutSlConfig, VideoSuffix
 import os

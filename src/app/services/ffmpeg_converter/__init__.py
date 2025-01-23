@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from .ffmpeg_converter_t import (
+from .ffmpeg_converter import (
     speedup,
     jumpcut,
     convert,

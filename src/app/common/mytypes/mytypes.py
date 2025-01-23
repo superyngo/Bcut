@@ -2,6 +2,8 @@ from enum import ReprEnum
 from pathlib import Path
 from typing import TypedDict, NotRequired
 
+__all__: list[str] = ["PathEnum"]
+
 
 class PathEnum(Path, ReprEnum):
     """
@@ -28,6 +30,3 @@ class PathEnum(Path, ReprEnum):
     def __truediv__(self, other):
         # Allow path operations directly on the enum member
         return self._value_ / other
-
-
-__all__: list[str] = ["PathEnum"]

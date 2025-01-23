@@ -11,8 +11,8 @@ import time
 import os
 import concurrent.futures
 import json
-from ...utils import logger
 from .types import EncodeKwargs
+from app.common import logger
 
 
 class methods(StrEnum):
@@ -27,6 +27,12 @@ class methods(StrEnum):
     DETECT_NON_SILENCE = auto()
     CUT_SILENCE = auto()
     CUT_SILENCE_RERENDER = auto()
+
+
+def _dic_to_ffmpeg_args(kwargs: dict | None = None) -> str:
+    if kwargs is None:
+        return ""
+    return " " + " ".join(f"-{key} {value}" for key, value in kwargs.items())
 
 
 def _gen_filter(
@@ -98,7 +104,7 @@ def probe_encoding_info(file_path: Path) -> EncodeKwargs:
     cleaned_None = {k: v for k, v in encoding_info.items() if v is not None and v != 0}
     logger.info(f"{file_path.name} probed: {cleaned_None}")
 
-    return cleaned_None
+    return cleaned_None  # type: ignore
 
 
 def detect_non_silence(
@@ -206,16 +212,20 @@ def speedup(
         vf = f"setpts={1/multiple}*PTS"
         af = f"atempo={multiple}"
 
-    output_kwargs = f'-vf "{vf}" -af "{af}" -map 0 -shortest -fps_mode vfr'
-    if othertags:
-        for key, value in othertags.items():
-            output_kwargs += f" -{key} {value}"
+    output_kwargs: dict = {
+        "vf": vf,
+        "af": af,
+        "map": 0,
+        "shortest": "",
+        "fps_mode": "vfr",
+    } | othertags
 
     logger.info(
         f"{methods.SPEEDUP} {input_file} to {output_file} with speed {multiple} and {output_kwargs = }"
     )
+
     try:
-        command = f'ffmpeg -i "{input_file}" {output_kwargs} "{temp_output_file}"'
+        command = f'ffmpeg -i -y "{input_file}"{_dic_to_ffmpeg_args(output_kwargs)} -y "{temp_output_file}"'
         os.system(command)
         temp_output_file.replace(output_file)
     except Exception as e:
@@ -265,16 +275,19 @@ def jumpcut(
         f"if(lte(mod(t, {interval + lasting}),{interval}), {interval_multiple_expr}, {lasting_multiple_expr})"
     )
     logger.info(f"{frame_select_expr = }")
-    output_kwargs = f"-vf \"select='{frame_select_expr}',setpts=N/FRAME_RATE/TB\" -af \"aselect='{frame_select_expr}',asetpts=N/SR/TB\" -map 0 -shortest -fps_mode vfr"
-    if othertags:
-        for key, value in othertags.items():
-            output_kwargs += f" -{key} {value}"
+    output_kwargs: dict = {
+        "vf": "select='{frame_select_expr}',setpts=N/FRAME_RATE/TB",
+        "af": "aselect='{frame_select_expr}',asetpts=N/SR/TB",
+        "map": 0,
+        "shortest": "",
+        "fps_mode": "vfr",
+    } | othertags
 
     logger.info(
         f"{methods.JUMPCUT} {input_file} to {output_file} with {output_kwargs = }"
     )
     try:
-        command = f'ffmpeg -i "{input_file}" {output_kwargs} "{temp_output_file}"'
+        command = f'ffmpeg -i "{input_file}"{_dic_to_ffmpeg_args(output_kwargs)} -y "{temp_output_file}"'
         os.system(command)
         temp_output_file.replace(output_file)
     except Exception as e:
@@ -283,9 +296,6 @@ def jumpcut(
         )
         return 2
     return 0
-
-
-# not yet
 
 
 def convert(
@@ -301,45 +311,43 @@ def convert(
 
     logger.info(f"{methods.CONVERT} {input_file} to {output_file} with {othertags = }")
     try:
-        # Speedup the video using ffmpeg-python
-        (
-            ffmpeg.input(input_file)
-            .output(
-                str(temp_output_file),
-                **othertags,
-            )
-            .run()
-        )
+        command = f'ffmpeg -i "{input_file}"{_dic_to_ffmpeg_args(othertags)} -y "{temp_output_file}"'
+        os.system(command)
         temp_output_file.replace(output_file)
-    except ffmpeg.Error as e:
-        logger.error(f"Failed to convert videos for {input_file}. Error: {e.stderr}")
+    except Exception as e:
+        logger.error(f"Failed to convert videos for {input_file}. Error: {e}")
         raise e
     return 0
 
 
-def merge(input_txt: Path, output_file: Path, **otherkwargs) -> int:
-    logger.info(f"{methods.MERGE} {input_txt} to {output_file} with {otherkwargs = }")
+def merge(input_txt: Path, output_file: Path, **othertags) -> int:
+    logger.info(f"{methods.MERGE} {input_txt} to {output_file} with {othertags = }")
+    output_kwargs: dict = {"f": "concat", "safe": 0, "c": "copy"} | othertags
 
     try:
-        # Use ffmpeg to concatenate videos
-        ffmpeg.input(str(input_txt), format="concat", safe=0).output(
-            str(output_file), c="copy", **otherkwargs
-        ).run()
+        command = f'ffmpeg -f concat -safe 0 -i "{input_txt}"{_dic_to_ffmpeg_args(output_kwargs)} "{output_file}"'
+        os.system(command)
         return 0
-    except ffmpeg.Error as e:
-        logger.error(f"Failed merging {input_txt}. Error: {e.stderr.decode()}")
+    except Exception as e:
+        logger.error(f"Failed merging {input_txt}. Error: {str(e)}")
         raise e
 
 
 def is_valid_video(file_path: Path | str) -> bool:
     """Function to check if a video file is valid using ffprobe."""
     try:
-        ffmpeg.probe(file_path)
-        message: str = f"Checking file: {file_path}, Status: Valid"
-        logger.info(message)
-        return True
-    except ffmpeg.Error as e:
-        message = f"Checking file: {file_path}, Error: {e.stderr.decode()}"
+        command = f'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "{file_path}"'
+        result = os.popen(command).read().strip()
+        if result:
+            message = f"Checking file: {file_path}, Status: Valid"
+            logger.info(message)
+            return True
+        else:
+            message = f"Checking file: {file_path}, Status: Invalid"
+            logger.info(message)
+            return False
+    except Exception as e:
+        message = f"Checking file: {file_path}, Error: {str(e)}"
         logger.info(message)
         return False
 
@@ -370,14 +378,13 @@ def cut(
     output_kwargs: dict = {
         "ss": start_time,
         "to": end_time,
-        "vcodec": "copy",
-        "acodec": "copy",
         "map": 0,
+        "c": "copy",
     } | othertags
     logger.info(f"{methods.CUT} {input_file} to {output_file} with {output_kwargs = }")
     try:
         # Re encode the video using ffmpeg-python
-        command = f'ffmpeg -i "{input_file}" -ss {start_time} -to {end_time} -c copy "{temp_output_file}"'
+        command = f'ffmpeg -i "{input_file}"{_dic_to_ffmpeg_args(output_kwargs)} -y "{temp_output_file}"'
         os.system(command)
         temp_output_file.replace(output_file)
     except Exception as e:
@@ -652,8 +659,8 @@ def cut_silence(
             os.remove(video_path)
         os.remove(input_txt_path)
         os.rmdir(input_txt_path.parent)
-    except ffmpeg.Error as e:
-        logger.error(f"Failed to cut silence for {input_file}. Error: {e.stderr}")
+    except Exception as e:
+        logger.error(f"Failed to cut silence for {input_file}. Error: {e}")
         return error_code.FAILED_TO_CUT
     return 0
 
@@ -716,21 +723,18 @@ def cut_silence_rerender(
         CSFiltersInfo.AUDIO.value, non_silence_segments
     )
 
-    output_kwargs = {
+    output_kwargs: dict = {
         "filter_script:v": video_filter_script,
         "filter_script:a": audio_filter_script,
     } | othertags
 
     try:
-        (
-            ffmpeg.input(str(input_file))
-            .output(str(temp_output_file), **output_kwargs)
-            .run()
-        )
+        command = f'ffmpeg -i "{input_file}"{_dic_to_ffmpeg_args(output_kwargs)} -y "{temp_output_file}"'
+        os.system(command)
         os.remove(video_filter_script)
         os.remove(audio_filter_script)
         temp_output_file.replace(output_file)
-    except ffmpeg.Error as e:
-        logger.error(f"Failed to cut silence for {input_file}. Error: {e.stderr}")
+    except Exception as e:
+        logger.error(f"Failed to cut silence for {input_file}. Error: {e}")
         return 2
     return 0

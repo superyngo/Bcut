@@ -1,17 +1,15 @@
 from pathlib import Path
-from app import config
+from app import constants
 from app import mideo_converter
+from app import ffmpeg_converter
 
+#
 
-# from app.services import ffmpeg_converter
-
-# file = Path(
-#     r"D:\Users\user\OneDrive - Chunghwa Telecom Co., Ltd\文件\Projects\Python\sample\cut_sl_speedup - 複製\input.mkv"
-# )
-# output = Path(
-#     r"D:\Users\user\OneDrive - Chunghwa Telecom Co., Ltd\文件\Projects\Python\sample\cut_sl_speedup - 複製\input_processed.mkv"
-# )
-# ffmpeg_converter.jumpcut(file, output, 2, 1, 1, 3)
+file = Path(r"F:\Projects\Python\sample\2025-01-20_1737324029_merged_cut.mkv")
+output = file.parent / f"{file.stem}_processed.mkv"
+code = ffmpeg_converter.probe_encoding_info(file)
+ffmpeg_converter.is_valid_video(file)
+ffmpeg_converter.cut_silence_rerender(file, output, -15, **code)
 
 
 def main() -> None:
