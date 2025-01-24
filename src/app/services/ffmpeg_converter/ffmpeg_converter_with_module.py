@@ -274,105 +274,105 @@ def jumpcut(
     return 0
 
 
-# def convert(
-#     input_file: Path, output_file: Path | None, **othertags: EncodeKwargs
-# ) -> int:
-#     if output_file is None:
-#         output_file = input_file.parent / (
-#             input_file.name + "_" + methods.CONVERT + input_file.suffix
-#         )
-#     temp_output_file: Path = output_file.parent / (
-#         output_file.stem + "_processing" + output_file.suffix
-#     )
+def convert(
+    input_file: Path, output_file: Path | None, **othertags: EncodeKwargs
+) -> int:
+    if output_file is None:
+        output_file = input_file.parent / (
+            input_file.name + "_" + methods.CONVERT + input_file.suffix
+        )
+    temp_output_file: Path = output_file.parent / (
+        output_file.stem + "_processing" + output_file.suffix
+    )
 
-#     logger.info(f"{methods.CONVERT} {input_file} to {output_file} with {othertags = }")
-#     try:
-#         # Speedup the video using ffmpeg-python
-#         (
-#             ffmpeg.input(input_file)
-#             .output(
-#                 str(temp_output_file),
-#                 **othertags,
-#             )
-#             .run()
-#         )
-#         temp_output_file.replace(output_file)
-#     except ffmpeg.Error as e:
-#         logger.error(f"Failed to convert videos for {input_file}. Error: {e.stderr}")
-#         raise e
-#     return 0
-
-
-# def merge(input_txt: Path, output_file: Path, **otherkwargs) -> int:
-#     logger.info(f"{methods.MERGE} {input_txt} to {output_file} with {otherkwargs = }")
-
-#     try:
-#         # Use ffmpeg to concatenate videos
-#         ffmpeg.input(str(input_txt), format="concat", safe=0).output(
-#             str(output_file), c="copy", **otherkwargs
-#         ).run()
-#         return 0
-#     except ffmpeg.Error as e:
-#         logger.error(f"Failed merging {input_txt}. Error: {e.stderr.decode()}")
-#         raise e
+    logger.info(f"{methods.CONVERT} {input_file} to {output_file} with {othertags = }")
+    try:
+        # Speedup the video using ffmpeg-python
+        (
+            ffmpeg.input(input_file)
+            .output(
+                str(temp_output_file),
+                **othertags,
+            )
+            .run()
+        )
+        temp_output_file.replace(output_file)
+    except ffmpeg.Error as e:
+        logger.error(f"Failed to convert videos for {input_file}. Error: {e.stderr}")
+        raise e
+    return 0
 
 
-# def is_valid_video(file_path: Path | str) -> bool:
-#     """Function to check if a video file is valid using ffprobe."""
-#     try:
-#         ffmpeg.probe(file_path)
-#         message: str = f"Checking file: {file_path}, Status: Valid"
-#         logger.info(message)
-#         return True
-#     except ffmpeg.Error as e:
-#         message = f"Checking file: {file_path}, Error: {e.stderr.decode()}"
-#         logger.info(message)
-#         return False
+def merge(input_txt: Path, output_file: Path, **otherkwargs) -> int:
+    logger.info(f"{methods.MERGE} {input_txt} to {output_file} with {otherkwargs = }")
+
+    try:
+        # Use ffmpeg to concatenate videos
+        ffmpeg.input(str(input_txt), format="concat", safe=0).output(
+            str(output_file), c="copy", **otherkwargs
+        ).run()
+        return 0
+    except ffmpeg.Error as e:
+        logger.error(f"Failed merging {input_txt}. Error: {e.stderr.decode()}")
+        raise e
 
 
-# def cut(
-#     input_file: Path,
-#     output_file: Path | None,
-#     start_time: str,
-#     end_time: str,
-#     **othertags: EncodeKwargs,
-# ) -> int:
-#     """Cut a video file using ffmpeg-python.
+def is_valid_video(file_path: Path | str) -> bool:
+    """Function to check if a video file is valid using ffprobe."""
+    try:
+        ffmpeg.probe(file_path)
+        message: str = f"Checking file: {file_path}, Status: Valid"
+        logger.info(message)
+        return True
+    except ffmpeg.Error as e:
+        message = f"Checking file: {file_path}, Error: {e.stderr.decode()}"
+        logger.info(message)
+        return False
 
-#     Raises:
-#         e: _description_
 
-#     Returns:
-#         _type_: _description_
-#     """
-#     if output_file is None:
-#         output_file = input_file.parent / (
-#             input_file.name + "_" + methods.CUT + input_file.suffix
-#         )
-#     temp_output_file: Path = output_file.parent / (
-#         output_file.stem + "_processing" + output_file.suffix
-#     )
+def cut(
+    input_file: Path,
+    output_file: Path | None,
+    start_time: str,
+    end_time: str,
+    **othertags: EncodeKwargs,
+) -> int:
+    """Cut a video file using ffmpeg-python.
 
-#     output_kwargs: dict = {
-#         "ss": start_time,
-#         "to": end_time,
-#         "vcodec": "copy",
-#         "acodec": "copy",
-#         "map": 0,
-#     } | othertags
-#     logger.info(f"{methods.CUT} {input_file} to {output_file} with {output_kwargs = }")
-#     try:
-#         # Re encode the video using ffmpeg-python
-#         (
-#             ffmpeg.input(str(input_file))
-#             .output(str(temp_output_file), **output_kwargs)
-#             .run()
-#         )
-#         temp_output_file.replace(output_file)
-#     except ffmpeg.Error as e:
-#         logger.error(f"Failed to cut videos for {input_file}. Error: {e.stderr}")
-#         raise e
-#     return 0
+    Raises:
+        e: _description_
+
+    Returns:
+        _type_: _description_
+    """
+    if output_file is None:
+        output_file = input_file.parent / (
+            input_file.name + "_" + methods.CUT + input_file.suffix
+        )
+    temp_output_file: Path = output_file.parent / (
+        output_file.stem + "_processing" + output_file.suffix
+    )
+
+    output_kwargs: dict = {
+        "ss": start_time,
+        "to": end_time,
+        "vcodec": "copy",
+        "acodec": "copy",
+        "map": 0,
+    } | othertags
+    logger.info(f"{methods.CUT} {input_file} to {output_file} with {output_kwargs = }")
+    try:
+        # Re encode the video using ffmpeg-python
+        (
+            ffmpeg.input(str(input_file))
+            .output(str(temp_output_file), **output_kwargs)
+            .run()
+        )
+        temp_output_file.replace(output_file)
+    except ffmpeg.Error as e:
+        logger.error(f"Failed to cut videos for {input_file}. Error: {e.stderr}")
+        raise e
+    return 0
 
 
 def _convert_seconds_to_timestamp(seconds: float) -> str:
@@ -529,122 +529,122 @@ def _merge_overlapping_segments(segments: Sequence[float]) -> Sequence[float]:
     return merged_segments
 
 
-# def _create_video_segments(
-#     input_video: Path, video_segments: Sequence[float]
-# ) -> tuple[Sequence[Path], Path]:
-#     """
-#     Cuts the input video into segments based on the provided start and end times.s
-#     """
-#     # Step 1: Validate input
-#     if len(video_segments) % 2 != 0:
-#         raise ValueError(
-#             "video_segments must contain an even number of elements (start and end times)."
-#         )
+def _create_video_segments(
+    input_video: Path, video_segments: Sequence[float]
+) -> tuple[Sequence[Path], Path]:
+    """
+    Cuts the input video into segments based on the provided start and end times.s
+    """
+    # Step 1: Validate input
+    if len(video_segments) % 2 != 0:
+        raise ValueError(
+            "video_segments must contain an even number of elements (start and end times)."
+        )
 
-#     # Step 2: Create a temporary folder for storing cut videos
-#     temp_dir: Path = Path(tempfile.mkdtemp())
-#     cut_videos: list[Path] = []  # List to store paths of cut video segments
+    # Step 2: Create a temporary folder for storing cut videos
+    temp_dir: Path = Path(tempfile.mkdtemp())
+    cut_videos: list[Path] = []  # List to store paths of cut video segments
 
-#     # Step 3: Use threading to process video segments
-#     # Get the number of CPU cores
-#     num_cores = os.cpu_count()
+    # Step 3: Use threading to process video segments
+    # Get the number of CPU cores
+    num_cores = os.cpu_count()
 
-#     # Use ThreadPoolExecutor to manage the threads
-#     with concurrent.futures.ThreadPoolExecutor(max_workers=num_cores) as executor:
-#         futures = []
-#         for i in range(0, len(video_segments), 2):
-#             start_time = _convert_seconds_to_timestamp(video_segments[i])
-#             end_time = _convert_seconds_to_timestamp(video_segments[i + 1])
-#             if start_time == end_time:
-#                 continue
-#             output_path: Path = temp_dir / f"{i // 2}{input_video.suffix}"
-#             cut_videos.append(output_path)
+    # Use ThreadPoolExecutor to manage the threads
+    with concurrent.futures.ThreadPoolExecutor(max_workers=num_cores) as executor:
+        futures = []
+        for i in range(0, len(video_segments), 2):
+            start_time = _convert_seconds_to_timestamp(video_segments[i])
+            end_time = _convert_seconds_to_timestamp(video_segments[i + 1])
+            if start_time == end_time:
+                continue
+            output_path: Path = temp_dir / f"{i // 2}{input_video.suffix}"
+            cut_videos.append(output_path)
 
-#             # Submit the cut task to the executor
-#             future = executor.submit(
-#                 cut, input_video, output_path, start_time, end_time
-#             )
-#             futures.append(future)
+            # Submit the cut task to the executor
+            future = executor.submit(
+                cut, input_video, output_path, start_time, end_time
+            )
+            futures.append(future)
 
-#         # Optionally, wait for all futures to complete
-#         concurrent.futures.wait(futures)
+        # Optionally, wait for all futures to complete
+        concurrent.futures.wait(futures)
 
-#     # Step 4: Sort the cut video paths by filename (index order)
-#     cut_videos.sort(key=lambda video_file: int(video_file.stem))
+    # Step 4: Sort the cut video paths by filename (index order)
+    cut_videos.sort(key=lambda video_file: int(video_file.stem))
 
-#     # Step 5: Create input.txt for FFmpeg concatenation
-#     input_txt_path: Path = temp_dir / "input.txt"
-#     with open(input_txt_path, "w") as f:
-#         for video_path in cut_videos:
-#             f.write(f"file '{video_path}'\n")
-#     return (cut_videos, input_txt_path)
+    # Step 5: Create input.txt for FFmpeg concatenation
+    input_txt_path: Path = temp_dir / "input.txt"
+    with open(input_txt_path, "w") as f:
+        for video_path in cut_videos:
+            f.write(f"file '{video_path}'\n")
+    return (cut_videos, input_txt_path)
 
 
-# def cut_silence(
-#     input_file: Path,
-#     output_file: Path | None = None,
-#     dB: int = -35,
-#     sl_duration: float = 0.2,
-#     seg_min_duration: float = 0,
-# ) -> int | Enum:
-#     class error_code(Enum):
-#         DURATION_LESS_THAN_ZERO = auto()
-#         NO_VALID_SEGMENTS = auto()
-#         FAILED_TO_CUT = auto()
+def cut_silence(
+    input_file: Path,
+    output_file: Path | None = None,
+    dB: int = -35,
+    sl_duration: float = 0.2,
+    seg_min_duration: float = 0,
+) -> int | Enum:
+    class error_code(Enum):
+        DURATION_LESS_THAN_ZERO = auto()
+        NO_VALID_SEGMENTS = auto()
+        FAILED_TO_CUT = auto()
 
-#     if sl_duration <= 0:
-#         logger.error(f"Duration must be greater than 0.")
-#         return error_code.DURATION_LESS_THAN_ZERO
+    if sl_duration <= 0:
+        logger.error(f"Duration must be greater than 0.")
+        return error_code.DURATION_LESS_THAN_ZERO
 
-#     if output_file is None:
-#         output_file = input_file.parent / (
-#             input_file.name + "_" + methods.CUT_SILENCE + input_file.suffix
-#         )
-#     temp_output_file: Path = output_file.parent / (
-#         output_file.stem + "_processing" + output_file.suffix
-#     )
-#     logger.info(
-#         f"{methods.CUT_SILENCE} {input_file} to {output_file} with {dB = } ,{sl_duration = }, {seg_min_duration = }."
-#     )
+    if output_file is None:
+        output_file = input_file.parent / (
+            input_file.name + "_" + methods.CUT_SILENCE + input_file.suffix
+        )
+    temp_output_file: Path = output_file.parent / (
+        output_file.stem + "_processing" + output_file.suffix
+    )
+    logger.info(
+        f"{methods.CUT_SILENCE} {input_file} to {output_file} with {dB = } ,{sl_duration = }, {seg_min_duration = }."
+    )
 
-#     non_silence_segments: Sequence[float]
-#     total_duration: float
-#     non_silence_segments, total_duration, _ = detect_non_silence(
-#         input_file, dB, sl_duration
-#     )
+    non_silence_segments: Sequence[float]
+    total_duration: float
+    non_silence_segments, total_duration, _ = detect_non_silence(
+        input_file, dB, sl_duration
+    )
 
-#     adjust_keyframes: Sequence[float] = _adjust_segments_to_keyframes(
-#         _ensure_minimum_segment_length(
-#             non_silence_segments, seg_min_duration, total_duration
-#         ),
-#         _get_keyframe_time(input_file),
-#     )
+    adjust_keyframes: Sequence[float] = _adjust_segments_to_keyframes(
+        _ensure_minimum_segment_length(
+            non_silence_segments, seg_min_duration, total_duration
+        ),
+        _get_keyframe_time(input_file),
+    )
 
-#     merged_overlapping_segments: Sequence[float] = _merge_overlapping_segments(
-#         adjust_keyframes
-#     )
-#     if merged_overlapping_segments == []:
-#         logger.error(f"No valid segments found for {input_file}.")
-#         return error_code.NO_VALID_SEGMENTS
+    merged_overlapping_segments: Sequence[float] = _merge_overlapping_segments(
+        adjust_keyframes
+    )
+    if merged_overlapping_segments == []:
+        logger.error(f"No valid segments found for {input_file}.")
+        return error_code.NO_VALID_SEGMENTS
 
-#     videos_segments: Sequence[Path]
-#     input_txt_path: Path
-#     videos_segments, input_txt_path = _create_video_segments(
-#         input_file, merged_overlapping_segments
-#     )
+    videos_segments: Sequence[Path]
+    input_txt_path: Path
+    videos_segments, input_txt_path = _create_video_segments(
+        input_file, merged_overlapping_segments
+    )
 
-#     try:
-#         merge(input_txt_path, temp_output_file)
-#         temp_output_file.replace(output_file)
-#         # Step 7: Clean up temporary files
-#         for video_path in videos_segments:
-#             os.remove(video_path)
-#         os.remove(input_txt_path)
-#         os.rmdir(input_txt_path.parent)
-#     except ffmpeg.Error as e:
-#         logger.error(f"Failed to cut silence for {input_file}. Error: {e.stderr}")
-#         return error_code.FAILED_TO_CUT
-#     return 0
+    try:
+        merge(input_txt_path, temp_output_file)
+        temp_output_file.replace(output_file)
+        # Step 7: Clean up temporary files
+        for video_path in videos_segments:
+            os.remove(video_path)
+        os.remove(input_txt_path)
+        os.rmdir(input_txt_path.parent)
+    except ffmpeg.Error as e:
+        logger.error(f"Failed to cut silence for {input_file}. Error: {e.stderr}")
+        return error_code.FAILED_TO_CUT
+    return 0
 
 
 def _create_cut_sl_filter_tempfile(

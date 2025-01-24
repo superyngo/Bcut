@@ -5,6 +5,7 @@ from enum import StrEnum, auto
 from collections import deque
 from collections.abc import Generator
 import re
+import subprocess
 from enum import Enum
 import tempfile
 import time
@@ -15,13 +16,14 @@ from .types import EncodeKwargs
 from app.common import logger
 
 
-class methods(StrEnum):
+class _methods(StrEnum):
     SPEEDUP = auto()
     JUMPCUT = auto()
     CONVERT = auto()
     CUT = auto()
+    REMOVE = auto()
     MERGE = auto()
-    PROBE_ENCODING_INFO = auto()
+    PROBE_ENCODING = auto()
     PROBE_DURATION = auto()
     IS_VALID_VIDEO = auto()
     DETECT_NON_SILENCE = auto()
@@ -32,7 +34,7 @@ class methods(StrEnum):
 def _dic_to_ffmpeg_args(kwargs: dict | None = None) -> str:
     if kwargs is None:
         return ""
-    return " " + " ".join(f"-{key} {value}" for key, value in kwargs.items())
+    return " ".join(f"-{key} {value}" for key, value in kwargs.items())
 
 
 def _gen_filter(
@@ -48,32 +50,33 @@ def _gen_filter(
     yield filter_text[1]
 
 
-def probe_duration(file_path: Path) -> float:
-    logger.info(f"Probing {file_path.name} duration")
-
-    probe_duration = (
-        os.popen(
-            f'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "{file_path}"'
-        )
-        .read()
-        .strip()
-    )
-    logger.info(f"{file_path.name} duration probed: {probe_duration}")
+def probe_duration(input_file: Path, **othertags) -> float:  # command
+    output_kwargs: dict = {
+        "v": "error",
+        "show_entries": "format=duration",
+        "of": "default=noprint_wrappers=1:nokey=1",
+        "i": f'"{input_file}"',
+    } | othertags
+    logger.info(f"Probing {input_file.name} duration with {output_kwargs = }")
+    command: str = f"ffprobe {_dic_to_ffmpeg_args(output_kwargs)}"
+    probe_duration = os.popen(command).read().strip()
+    logger.info(f"{input_file.name} duration probed: {probe_duration}")
 
     return float(probe_duration)
 
 
-def probe_encoding_info(file_path: Path) -> EncodeKwargs:
-    logger.info(f"Probing {file_path.name} encoding info")
+def probe_encoding(input_file: Path, **othertags) -> EncodeKwargs:  # command
+    output_kwargs: dict = {
+        "v": "error",
+        "print_format": "json",
+        "show_format": "",
+        "show_streams": "",
+        "i": f'"{input_file}"',
+    } | othertags
+    logger.info(f"Probing {input_file.name} encoding with {output_kwargs = }")
     # Probe the video file to get metadata
-    probe = (
-        os.popen(
-            f'ffprobe -v error -print_format json -show_format -show_streams "{file_path}"'
-        )
-        .read()
-        .encode("utf-8")
-        .decode("utf-8")
-    )
+    command: str = f"ffprobe {_dic_to_ffmpeg_args(output_kwargs)}"
+    probe = os.popen(command).read().encode("utf-8").decode("utf-8")
     probe = json.loads(probe)
 
     # Initialize the dictionary with default values
@@ -102,19 +105,39 @@ def probe_encoding_info(file_path: Path) -> EncodeKwargs:
     format_info = probe.get("format", {})
     encoding_info["f"] = format_info.get("format_name").split(",")[0]
     cleaned_None = {k: v for k, v in encoding_info.items() if v is not None and v != 0}
-    logger.info(f"{file_path.name} probed: {cleaned_None}")
+    logger.info(f"{input_file.name} probed: {cleaned_None}")
 
     return cleaned_None  # type: ignore
 
 
-def detect_non_silence(
-    file_path: Path, dB: int = -35, sl_duration: float = 1
+def detect_non_silence(  # command
+    input_file: Path, dB: int = -35, sl_duration: float = 1, **othertags
 ) -> tuple[Sequence[float], float, float]:
-    logger.info(f"Detecting silences in {file_path.name} with {dB = }")
+    """_summary_
 
-    command = (
-        f'ffmpeg -i "{file_path}" -af silencedetect=n={dB}dB:d={sl_duration} -f null -'
+    Args:
+        input_file (Path): _description_
+        dB (int, optional): _description_. Defaults to -35.
+        sl_duration (float, optional): _description_. Defaults to 1.
+
+    Returns:
+        tuple[Sequence[float], float, float]: (non_silence_segs, total_duration, total_silence_duration)
+    """
+    output_kwargs: dict = (
+        {
+            "i": f'"{input_file}"',
+            "af": f"silencedetect=n={dB}dB:d={sl_duration}",
+            "f": "null",
+        }
+        | othertags
+        | {"": ""}
     )
+
+    logger.info(
+        f"Detecting silences of {input_file.name} by {dB = } and {output_kwargs = }"
+    )
+
+    command: str = f"ffmpeg {_dic_to_ffmpeg_args(output_kwargs)}"
     output = os.popen(command + " 2>&1").read()
 
     # Total duration
@@ -147,16 +170,17 @@ def detect_non_silence(
     return (non_silence_segs, total_duration, total_silence_duration)
 
 
-def _get_keyframe_time(file_path: Path) -> list[float]:
-    logger.info(f"Get keyframe timeing for {file_path.name}")
-    probe = (
-        os.popen(
-            f'ffprobe -v error -select_streams v:0 -show_entries packet=pts_time,flags -of json "{file_path}"'
-        )
-        .read()
-        .encode("utf-8")
-        .decode("utf-8")
-    )
+def _get_keyframe(input_file: Path, **othertags) -> list[float]:  # command
+    output_kwargs: dict = {
+        "v": "error",
+        "select_streams": "v:0",
+        "show_entries": "packet=pts_time,flags",
+        "of": "json",
+        "i": f'"{input_file}"',
+    } | othertags
+    logger.info(f"Get keyframe for {input_file.name} with {output_kwargs = }")
+    command: str = f"ffprobe {_dic_to_ffmpeg_args(output_kwargs)}"
+    probe = os.popen(command).read().encode("utf-8").decode("utf-8")
     probe = json.loads(probe)
     keyframe_pts: list[float] = [
         float(packet["pts_time"])
@@ -166,7 +190,7 @@ def _get_keyframe_time(file_path: Path) -> list[float]:
     return keyframe_pts
 
 
-def speedup(
+def speedup(  # command
     input_file: Path,
     output_file: Path | None,
     multiple: float | int,
@@ -191,7 +215,7 @@ def speedup(
 
     if output_file is None:
         output_file = input_file.parent / (
-            input_file.name + "_" + methods.SPEEDUP + input_file.suffix
+            input_file.name + "_" + _methods.SPEEDUP + input_file.suffix
         )
 
     if multiple == 1:
@@ -212,31 +236,36 @@ def speedup(
         vf = f"setpts={1/multiple}*PTS"
         af = f"atempo={multiple}"
 
-    output_kwargs: dict = {
-        "vf": vf,
-        "af": af,
-        "map": 0,
-        "shortest": "",
-        "fps_mode": "vfr",
-    } | othertags
+    output_kwargs: dict = (
+        {
+            "i": f'"{input_file}"',
+            "vf": vf,
+            "af": af,
+            "map": 0,
+            "shortest": "",
+            "fps_mode": "vfr",
+        }
+        | othertags
+        | {"y": f'"{temp_output_file}"'}
+    )
 
     logger.info(
-        f"{methods.SPEEDUP} {input_file} to {output_file} with speed {multiple} and {output_kwargs = }"
+        f"{_methods.SPEEDUP} {input_file.name} to {output_file.name} by {multiple = } with {output_kwargs = }"
     )
 
     try:
-        command = f'ffmpeg -i -y "{input_file}"{_dic_to_ffmpeg_args(output_kwargs)} -y "{temp_output_file}"'
+        command: str = f"ffmpeg {_dic_to_ffmpeg_args(output_kwargs)}"
         os.system(command)
         temp_output_file.replace(output_file)
     except Exception as e:
         logger.error(
-            f"Failed to {methods.SPEEDUP} videos for {input_file}. Error: {str(e)}"
+            f"Failed to {_methods.SPEEDUP} videos for {input_file}. Error: {str(e)}"
         )
         raise e
     return 0
 
 
-def jumpcut(
+def jumpcut(  # command
     input_file: Path,
     output_file: Path | None,
     interval: float,
@@ -274,44 +303,57 @@ def jumpcut(
     frame_select_expr: str = (
         f"if(lte(mod(t, {interval + lasting}),{interval}), {interval_multiple_expr}, {lasting_multiple_expr})"
     )
-    logger.info(f"{frame_select_expr = }")
-    output_kwargs: dict = {
-        "vf": "select='{frame_select_expr}',setpts=N/FRAME_RATE/TB",
-        "af": "aselect='{frame_select_expr}',asetpts=N/SR/TB",
-        "map": 0,
-        "shortest": "",
-        "fps_mode": "vfr",
-    } | othertags
+    output_kwargs: dict = (
+        {
+            "i": f'"{input_file}"',
+            "vf": f"\"select='{frame_select_expr}',setpts=N/FRAME_RATE/TB\"",
+            "af": f"\"aselect='{frame_select_expr}',asetpts=N/SR/TB\"",
+            "map": 0,
+            "shortest": "",
+            "fps_mode": "vfr",
+        }
+        | othertags
+        | {"y": f'"{temp_output_file}"'}
+    )
 
     logger.info(
-        f"{methods.JUMPCUT} {input_file} to {output_file} with {output_kwargs = }"
+        f"{_methods.JUMPCUT} {input_file.name} to {output_file.name} with {output_kwargs = }"
     )
     try:
-        command = f'ffmpeg -i "{input_file}"{_dic_to_ffmpeg_args(output_kwargs)} -y "{temp_output_file}"'
+        command: str = f"ffmpeg {_dic_to_ffmpeg_args(output_kwargs)}"
+        print(f"{command = }")
         os.system(command)
         temp_output_file.replace(output_file)
     except Exception as e:
         logger.error(
-            f"Failed to {methods.JUMPCUT} videos for {input_file}. Error: {str(e)}"
+            f"Failed to {_methods.JUMPCUT} videos for {input_file}. Error: {str(e)}"
         )
         return 2
     return 0
 
 
-def convert(
-    input_file: Path, output_file: Path | None, **othertags: EncodeKwargs
-) -> int:
+def convert(input_file: Path, output_file: Path | None, **othertags) -> int:  # command
     if output_file is None:
         output_file = input_file.parent / (
-            input_file.name + "_" + methods.CONVERT + input_file.suffix
+            input_file.stem + "_" + _methods.CONVERT + input_file.suffix
         )
     temp_output_file: Path = output_file.parent / (
         output_file.stem + "_processing" + output_file.suffix
     )
 
-    logger.info(f"{methods.CONVERT} {input_file} to {output_file} with {othertags = }")
+    output_kwargs: dict = (
+        {
+            "i": f'"{input_file}"',
+        }
+        | othertags
+        | {"y": f'"{temp_output_file}"'}
+    )
+
+    logger.info(
+        f"{_methods.CONVERT} {input_file.name} to {output_file.name} with {output_kwargs = }"
+    )
     try:
-        command = f'ffmpeg -i "{input_file}"{_dic_to_ffmpeg_args(othertags)} -y "{temp_output_file}"'
+        command: str = f"ffmpeg {_dic_to_ffmpeg_args(output_kwargs)}"
         os.system(command)
         temp_output_file.replace(output_file)
     except Exception as e:
@@ -320,12 +362,24 @@ def convert(
     return 0
 
 
-def merge(input_txt: Path, output_file: Path, **othertags) -> int:
-    logger.info(f"{methods.MERGE} {input_txt} to {output_file} with {othertags = }")
-    output_kwargs: dict = {"f": "concat", "safe": 0, "c": "copy"} | othertags
-
+def merge(input_txt: Path, output_file: Path, **othertags) -> int:  # command
+    logger.info(f"{_methods.MERGE} {input_txt} to {output_file} with {othertags = }")
+    output_kwargs: dict = (
+        {
+            "f": "concat",
+            "safe": 0,
+            "i": input_txt,
+            "c:a": "copy",
+            "c:v": "copy",
+        }
+        | othertags
+        | {"y": output_file}
+    )
+    logger.info(
+        f"{_methods.CONVERT} {input_txt.name} to {output_file.name} with {output_kwargs = }"
+    )
     try:
-        command = f'ffmpeg -f concat -safe 0 -i "{input_txt}"{_dic_to_ffmpeg_args(output_kwargs)} "{output_file}"'
+        command: str = f"ffmpeg {_dic_to_ffmpeg_args(output_kwargs)}"
         os.system(command)
         return 0
     except Exception as e:
@@ -333,30 +387,38 @@ def merge(input_txt: Path, output_file: Path, **othertags) -> int:
         raise e
 
 
-def is_valid_video(file_path: Path | str) -> bool:
+def is_valid_video(input_file: Path, **othertags) -> bool:  # command
     """Function to check if a video file is valid using ffprobe."""
+    output_kwargs: dict = {
+        "v": "error",
+        "show_entries": "format=duration",
+        "of": "default=noprint_wrappers=1:nokey=1",
+        "i": f'"{input_file}"',
+    } | othertags
+    logger.info(f"Validate {input_file.name} with {output_kwargs = }")
     try:
-        command = f'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "{file_path}"'
+        command: str = f"ffprobe {_dic_to_ffmpeg_args(output_kwargs)}"
         result = os.popen(command).read().strip()
         if result:
-            message = f"Checking file: {file_path}, Status: Valid"
+            message = f"Checking file: {input_file}, Status: Valid"
             logger.info(message)
             return True
         else:
-            message = f"Checking file: {file_path}, Status: Invalid"
+            message = f"Checking file: {input_file}, Status: Invalid"
             logger.info(message)
             return False
     except Exception as e:
-        message = f"Checking file: {file_path}, Error: {str(e)}"
+        message = f"Checking file: {input_file}, Error: {str(e)}"
         logger.info(message)
         return False
 
 
-def cut(
+def cut(  # command
     input_file: Path,
     output_file: Path | None,
     start_time: str,
     end_time: str,
+    rerender: bool = False,
     **othertags: EncodeKwargs,
 ) -> int:
     """Cut a video file using ffmpeg-python.
@@ -369,27 +431,91 @@ def cut(
     """
     if output_file is None:
         output_file = input_file.parent / (
-            input_file.name + "_" + methods.CUT + input_file.suffix
+            input_file.stem + "_" + _methods.CUT + input_file.suffix
         )
     temp_output_file: Path = output_file.parent / (
         output_file.stem + "_processing" + output_file.suffix
     )
 
-    output_kwargs: dict = {
-        "ss": start_time,
-        "to": end_time,
-        "map": 0,
-        "c": "copy",
-    } | othertags
-    logger.info(f"{methods.CUT} {input_file} to {output_file} with {output_kwargs = }")
+    output_kwargs: dict = (
+        {
+            "i": f'"{input_file}"',
+            "ss": start_time,
+            "to": end_time,
+            "map": 0,
+        }
+        | (
+            {
+                "c:a": "copy",
+                "c:v": "copy",
+            }
+            if not rerender
+            else {}
+        )
+        | othertags
+        | {"y": f'"{temp_output_file}"'}
+    )
+    logger.info(
+        f"{_methods.CUT} {input_file.name} to {output_file.name} with {output_kwargs = }"
+    )
     try:
         # Re encode the video using ffmpeg-python
-        command = f'ffmpeg -i "{input_file}"{_dic_to_ffmpeg_args(output_kwargs)} -y "{temp_output_file}"'
-        os.system(command)
+        command: str = f"ffmpeg {_dic_to_ffmpeg_args(output_kwargs)}"
+        subprocess.run(command, shell=True, check=True)
         temp_output_file.replace(output_file)
     except Exception as e:
         logger.error(f"Failed to cut videos for {input_file}. Error: {e}")
         raise e
+    return 0
+
+
+def remove(  # command
+    input_file: Path,
+    output_file: Path | None,
+    start_time: str,
+    end_time: str,
+    rerender: bool = False,
+) -> int:
+    """remove a segment from a video
+
+    Raises:
+        e: _description_
+
+    Returns:
+        _type_: _description_
+    """
+    if output_file is None:
+        output_file = input_file.parent / (
+            input_file.stem + "_" + _methods.REMOVE + input_file.suffix
+        )
+    temp_output_file: Path = output_file.parent / (
+        output_file.stem + "_processing" + output_file.suffix
+    )
+    logger.info(f"{_methods.CUT} {input_file.name} to {output_file.name}")
+
+    remainded_segments: Sequence[float] = [
+        0.0,
+        _convert_timestamp_to_seconds(start_time),
+        _convert_timestamp_to_seconds(end_time),
+        probe_duration(input_file),
+    ]
+    videos_segments: Sequence[Path]
+    input_txt_path: Path
+    videos_segments, input_txt_path = _create_video_segments(
+        input_file, remainded_segments, rerender=rerender
+    )
+
+    try:
+        merge(input_txt_path, temp_output_file)
+        temp_output_file.replace(output_file)
+        # Step 7: Clean up temporary files
+        for video_path in videos_segments:
+            os.remove(video_path)
+        os.remove(input_txt_path)
+        os.rmdir(input_txt_path.parent)
+    except Exception as e:
+        logger.error(f"Failed to cut silence for {input_file}. Error: {e}")
+        return 1
     return 0
 
 
@@ -548,7 +674,7 @@ def _merge_overlapping_segments(segments: Sequence[float]) -> Sequence[float]:
 
 
 def _create_video_segments(
-    input_video: Path, video_segments: Sequence[float]
+    input_video: Path, video_segments: Sequence[float], **othertags
 ) -> tuple[Sequence[Path], Path]:
     """
     Cuts the input video into segments based on the provided start and end times.s
@@ -580,7 +706,7 @@ def _create_video_segments(
 
             # Submit the cut task to the executor
             future = executor.submit(
-                cut, input_video, output_path, start_time, end_time
+                cut, input_video, output_path, start_time, end_time, **othertags
             )
             futures.append(future)
 
@@ -616,13 +742,13 @@ def cut_silence(
 
     if output_file is None:
         output_file = input_file.parent / (
-            input_file.name + "_" + methods.CUT_SILENCE + input_file.suffix
+            input_file.stem + "_" + _methods.CUT_SILENCE + input_file.suffix
         )
     temp_output_file: Path = output_file.parent / (
         output_file.stem + "_processing" + output_file.suffix
     )
     logger.info(
-        f"{methods.CUT_SILENCE} {input_file} to {output_file} with {dB = } ,{sl_duration = }, {seg_min_duration = }."
+        f"{_methods.CUT_SILENCE} {input_file} to {output_file} with {dB = } ,{sl_duration = }, {seg_min_duration = }."
     )
 
     non_silence_segments: Sequence[float]
@@ -635,7 +761,7 @@ def cut_silence(
         _ensure_minimum_segment_length(
             non_silence_segments, seg_min_duration, total_duration
         ),
-        _get_keyframe_time(input_file),
+        _get_keyframe(input_file),
     )
 
     merged_overlapping_segments: Sequence[float] = _merge_overlapping_segments(
@@ -678,7 +804,7 @@ def _create_cut_sl_filter_tempfile(
     return path
 
 
-def cut_silence_rerender(
+def cut_silence_rerender(  # command
     input_file: Path,
     output_file: Path | None = None,
     dB: int = -30,
@@ -691,13 +817,13 @@ def cut_silence_rerender(
 
     if output_file is None:
         output_file = input_file.parent / (
-            input_file.name + "_" + methods.CUT_SILENCE + input_file.suffix
+            input_file.stem + "_" + _methods.CUT_SILENCE + input_file.suffix
         )
     temp_output_file: Path = output_file.parent / (
         output_file.stem + "_processing" + output_file.suffix
     )
     logger.info(
-        f"{methods.CUT_SILENCE} {input_file} to {output_file} with {dB = } ,{sl_duration = } and {othertags = }"
+        f"{_methods.CUT_SILENCE} {input_file} to {output_file} with {dB = } ,{sl_duration = } and {othertags = }"
     )
 
     non_silence_segments: Sequence[float] = detect_non_silence(
@@ -723,13 +849,20 @@ def cut_silence_rerender(
         CSFiltersInfo.AUDIO.value, non_silence_segments
     )
 
-    output_kwargs: dict = {
-        "filter_script:v": video_filter_script,
-        "filter_script:a": audio_filter_script,
-    } | othertags
-
+    output_kwargs: dict = (
+        {
+            "i": f'"{input_file}"',
+            "filter_script:v": video_filter_script,
+            "filter_script:a": audio_filter_script,
+        }
+        | othertags
+        | {"y": f'"{temp_output_file}"'}
+    )
+    logger.info(
+        f"{_methods.CUT} {input_file.name} to {output_file.name} with {output_kwargs = }"
+    )
     try:
-        command = f'ffmpeg -i "{input_file}"{_dic_to_ffmpeg_args(output_kwargs)} -y "{temp_output_file}"'
+        command: str = f"ffmpeg {_dic_to_ffmpeg_args(output_kwargs)}"
         os.system(command)
         os.remove(video_filter_script)
         os.remove(audio_filter_script)

@@ -5,11 +5,14 @@ from app import ffmpeg_converter
 
 #
 
-file = Path(r"F:\Projects\Python\sample\2025-01-20_1737324029_merged_cut.mkv")
-output = file.parent / f"{file.stem}_processed.mkv"
-code = ffmpeg_converter.probe_encoding_info(file)
-ffmpeg_converter.is_valid_video(file)
-ffmpeg_converter.cut_silence_rerender(file, output, -15, **code)
+file = Path(
+    r"F:\Projects\Python\sample\2025-01-20_1737324029_merged_cut_jumpcut1_remove_remove.mkv"
+)
+output = file.parent / f"{file.stem}_removed.mkv"
+ffmpeg_converter.cut(file, output, "00:00:00", "00:00:10")
+ffmpeg_converter.speedup(file, output, 3.9)
+ffmpeg_converter.jumpcut(file, output, 2, 5, 0, 5)
+ffmpeg_converter.remove(file, None, "00:01:08", "00:01:18", rerender=True)
 
 
 def main() -> None:
