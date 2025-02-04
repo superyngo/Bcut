@@ -229,8 +229,8 @@ def jumpcut(
     output_file: Path | None,
     interval: float | int,
     lasting: float | int,
-    interval_multiple: float | int = 0,  # 0 means unwated cut out
-    lasting_multiple: float | int = 1,  # 0 means unwated cut out
+    interval_multiple: float | int = 0,  # 0 means unwanted cut out
+    lasting_multiple: float | int = 1,  # 0 means unwanted cut out
     **othertags,
 ) -> int:
     if interval <= 0 or lasting <= 0:

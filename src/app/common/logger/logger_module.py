@@ -25,6 +25,7 @@ def setup_logger(
         return _instances[log_path]
     log_path.mkdir(parents=True, exist_ok=True)
     log_filename: Path = log_path / f"{datestamp}.log"
+    print(f"{log_filename = }")
 
     if config_path is None:
         config_path = Path()

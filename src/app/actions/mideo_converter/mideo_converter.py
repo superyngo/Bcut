@@ -125,7 +125,7 @@ def _merge_videos(
         # Prepare the input file list with valid check for ffmpeg
         input_files: list[Path] = []
         for video_path in sorted_videos.values():
-            if ffmpeg_converter.is_valid_video(video_path):
+            if ffmpeg_converter.probe_is_valid_video(video_path):
                 input_files.append(video_path)
                 dir_to_delete.add(video_path.parent)
 

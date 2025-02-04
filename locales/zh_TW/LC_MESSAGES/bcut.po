@@ -1,0 +1,19 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: zh_TW\n"
+
+msgid "Navigator: 功能選擇"
+msgstr "導航器：功能選擇"
+
+msgid "Video Area: 選擇或拖入視頻"
+msgstr "視頻區域：選擇或拖入視頻"
+
+msgid "Input Area: 設置參數"
+msgstr "輸入區域：設置參數"
+
+msgid "Progress: %d%%"
+msgstr "進度：%d%%"
+
+msgid "Console Message: 顯示標準輸出/錯誤消息"
+msgstr "控制台消息：顯示標準輸出/錯誤消息"

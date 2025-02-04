@@ -1,18 +1,60 @@
+from math import e
 from pathlib import Path
 from app import constants
 from app import mideo_converter
-from app import ffmpeg_converter
+from app.services.ffmpeg_converter import ffmpeg_converter
 
 #
 
-file = Path(
-    r"F:\Projects\Python\sample\2025-01-20_1737324029_merged_cut_jumpcut1_remove_remove.mkv"
+file = Path(r"H:\Projects\Python\sample\2025-01-21_1737410559_merged_cut_sl.mp4")
+file2 = Path(
+    r"H:\Projects\Python\sample\tt\cut_sl_speedup\2025-01-03_1735874716_merged_cut_sl_speedup.mkv"
 )
-output = file.parent / f"{file.stem}_removed.mkv"
-ffmpeg_converter.cut(file, output, "00:00:00", "00:00:10")
-ffmpeg_converter.speedup(file, output, 3.9)
-ffmpeg_converter.jumpcut(file, output, 2, 5, 0, 5)
-ffmpeg_converter.remove(file, None, "00:01:08", "00:01:18", rerender=True)
+file3 = Path(r"H:\Projects\Python\sample\2025-01-20_1737324029_merged_cut_jumpcut.mkv")
+file4 = Path(
+    r"H:\Projects\Python\sample\2025-01-20_1737324029_merged_cut_jumpcut_keep_or_remove.mkv"
+)
+output_dir: Path = Path(r"H:\Projects\Python\sample\abc")
+output = file.parent / f"{file.stem}_processed.mkv"
+
+ffmpeg_converter._create_speedup_args(10)
+ffmpeg_converter.speedup(file, None, 2)
+ffmpeg_converter._ffmpeg(
+    **ffmpeg_converter._create_full_args(
+        file2, None, **ffmpeg_converter._create_speedup_args(2)
+    )
+)
+ffmpeg_converter.cut_silence(
+    file,
+    None,
+    -15,
+    odd_args=ffmpeg_converter._create_speedup_args(2),
+    # even_args=ffmpeg_converter._create_speedup_args(10),
+)
+
+ffmpeg_converter.advanced_keep_or_remove_by_cuts(
+    file,
+    None,
+    (
+        "00:00:00",
+        "00:00:05",
+        "00:12:22",
+        "00:14:26",
+        "00:17:30",
+        "00:43:44",
+        "00:54:20",
+        "01:03:46",
+    ),
+    odd_args={},
+    even_args=ffmpeg_converter._create_speedup_args(50),
+)
+full_args = ffmpeg_converter._create_full_args(
+    input_file=file,
+    output_file=file.parent / (file.stem + "_processed" + file.suffix),
+    **ffmpeg_converter._create_cut_args(start_time="00:00:00", end_time="00:01:00"),
+    **ffmpeg_converter._create_jumpcut_args(2, 5, 0, 5),
+)
+ffmpeg_converter._ffmpeg(**full_args)
 
 
 def main() -> None:
