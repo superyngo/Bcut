@@ -41,7 +41,7 @@ def _dic_to_ffmpeg_args(kwargs: dict | None = None) -> str:
 def _ffmpeg(**kwargs):
     default_kwargs = {"loglevel": "warning"}
     output_kwargs: dict = kwargs
-    logger.info(f"Execute FFmpeg with {output_kwargs = }")
+    logger.info(f"Executing FFmpeg with {output_kwargs = }")
     command = ["ffmpeg"] + _dic_to_ffmpeg_args(kwargs | default_kwargs).split()
     subprocess.run(command, check=True)
 
@@ -61,7 +61,7 @@ def _gen_filter(
 
 def _ffprobe(**kwargs):
     output_kwargs: dict = kwargs
-    logger.info(f"Execute ffprobe with {output_kwargs = }")
+    logger.info(f"Executing ffprobe with {output_kwargs = }")
     command: str = f"ffprobe {_dic_to_ffmpeg_args(kwargs)}"
     subprocess.run(command, shell=True, check=True)
 
@@ -71,7 +71,7 @@ def probe_duration(input_file: Path, **othertags) -> float:  # command
         "v": "error",
         "show_entries": "format=duration",
         "of": "default=noprint_wrappers=1:nokey=1",
-        "i": f'"{input_file}"',
+        "i": input_file,
     } | othertags
     logger.info(f"Probing {input_file.name} duration with {output_kwargs = }")
     command: str = f"ffprobe {_dic_to_ffmpeg_args(output_kwargs)}"
@@ -87,7 +87,7 @@ def probe_encoding(input_file: Path, **othertags) -> EncodeKwargs:  # command
         "print_format": "json",
         "show_format": "",
         "show_streams": "",
-        "i": f'"{input_file}"',
+        "i": input_file,
     } | othertags
     logger.info(f"Probing {input_file.name} encoding with {output_kwargs = }")
     # Probe the video file to get metadata
@@ -141,7 +141,7 @@ def probe_non_silence(  # command
     """
     output_kwargs: dict = (
         {
-            "i": f'"{input_file}"',
+            "i": input_file,
             "af": f"silencedetect=n={dB}dB:d={sl_duration}",
             "f": "null",
         }
@@ -192,22 +192,22 @@ def probe_is_valid_video(input_file: Path, **othertags) -> bool:  # command
         "v": "error",
         "show_entries": "format=duration",
         "of": "default=noprint_wrappers=1:nokey=1",
-        "i": f'"{input_file}"',
+        "i": input_file,
     } | othertags
-    logger.info(f"Validate {input_file.name} with {output_kwargs = }")
+    logger.info(f"Validating {input_file.name} with {output_kwargs = }")
     try:
         command: str = f"ffprobe {_dic_to_ffmpeg_args(output_kwargs)}"
         result = os.popen(command).read().strip()
         if result:
-            message = f"Checking file: {input_file}, Status: Valid"
+            message = f"Validated file: {input_file}, Status: Valid"
             logger.info(message)
             return True
         else:
-            message = f"Checking file: {input_file}, Status: Invalid"
+            message = f"Validated file: {input_file}, Status: Invalid"
             logger.info(message)
             return False
     except Exception as e:
-        message = f"Checking file: {input_file}, Error: {str(e)}"
+        message = f"Validating file: {input_file}, Error: {str(e)}"
         logger.info(message)
         return False
 
@@ -218,9 +218,9 @@ def _probe_keyframe(input_file: Path, **othertags) -> list[float]:  # command
         "select_streams": "v:0",
         "show_entries": "packet=pts_time,flags",
         "of": "json",
-        "i": f'"{input_file}"',
+        "i": input_file,
     } | othertags
-    logger.info(f"Get keyframe for {input_file.name} with {output_kwargs = }")
+    logger.info(f"Getting keyframe for {input_file.name} with {output_kwargs = }")
     command: str = f"ffprobe {_dic_to_ffmpeg_args(output_kwargs)}"
     probe = os.popen(command).read().encode("utf-8").decode("utf-8")
     probe = json.loads(probe)
@@ -297,10 +297,10 @@ def speedup(  # command
     )
 
     output_kwargs: dict = (
-        {"i": f'"{input_file}"'}
+        {"i": input_file}
         | _create_speedup_args(multiple)
         | othertags
-        | {"y": f'"{temp_output_file}"'}
+        | {"y": temp_output_file}
     )
 
     logger.info(
@@ -413,10 +413,10 @@ def convert(input_file: Path, output_file: Path | None, **othertags) -> int:  # 
 
     output_kwargs: dict = (
         {
-            "i": f'"{input_file}"',
+            "i": input_file,
         }
         | othertags
-        | {"y": f'"{temp_output_file}"'}
+        | {"y": temp_output_file}
     )
 
     logger.info(
@@ -457,7 +457,6 @@ def create_merge_txt(
 
 
 def merge(input_txt: Path, output_file: Path, **othertags) -> int:  # command
-    logger.info(f"{_methods.MERGE} {input_txt} to {output_file} with {othertags = }")
     output_kwargs: dict = (
         {
             "f": "concat",
@@ -642,9 +641,7 @@ def _create_full_args(
         output_file = input_file.parent / (
             input_file.stem + "_" + _methods.CUT + input_file.suffix
         )
-    args: dict[str, str] = (
-        {"i": f'"{input_file}"'} | othertags | {"y": f'"{output_file}"'}
-    )
+    args: dict[str, str] = {"i": input_file} | othertags | {"y": output_file}
     return args
 
 
@@ -681,7 +678,7 @@ def cut(  # command
 
     output_kwargs: dict = (
         {
-            "i": f'"{input_file}"',
+            "i": input_file,
         }
         | _create_cut_args(start_time, end_time)
         | {
@@ -696,7 +693,7 @@ def cut(  # command
             else {}
         )
         | othertags
-        | {"y": f'"{temp_output_file}"'}
+        | {"y": temp_output_file}
     )
     logger.info(
         f"{_methods.CUT} {input_file.name} to {output_file.name} with {output_kwargs = }"
@@ -853,7 +850,9 @@ def advanced_keep_or_remove_by_cuts(
     temp_output_file: Path = output_file.parent / (
         output_file.stem + "_processing" + output_file.suffix
     )
-    logger.info(f"{_methods.KEEP_OR_REMOVE} {input_file.name} to {output_file.name}")
+    logger.info(
+        f"{_methods.KEEP_OR_REMOVE} {input_file.name} to {output_file.name} with {odd_args = } ,{even_args = }."
+    )
 
     # Step 1:convert video segments if needed and double them
     video_segments = deque(
@@ -930,8 +929,8 @@ def advanced_keep_or_remove_by_cuts(
         # Step 5: Clean up temporary files
         for video_path in cut_videos:
             os.remove(video_path)
-        # os.remove(input_txt_path)
-        # os.rmdir(temp_dir)
+        os.remove(input_txt_path)
+        os.rmdir(temp_dir)
     except Exception as e:
         logger.error(
             f"Failed to {_methods.KEEP_OR_REMOVE} for {input_file}. Error: {e}"
@@ -1039,9 +1038,6 @@ def cut_silence_rerender(  # command
     temp_output_file: Path = output_file.parent / (
         output_file.stem + "_processing" + output_file.suffix
     )
-    logger.info(
-        f"{_methods.CUT_SILENCE} {input_file} to {output_file} with {dB = } ,{sl_duration = } and {othertags = }"
-    )
 
     non_silence_segments: Sequence[float] = probe_non_silence(
         input_file, dB, sl_duration
@@ -1068,15 +1064,15 @@ def cut_silence_rerender(  # command
 
     output_kwargs: dict = (
         {
-            "i": f'"{input_file}"',
+            "i": input_file,
             "filter_script:v": video_filter_script,
             "filter_script:a": audio_filter_script,
         }
         | othertags
-        | {"y": f'"{temp_output_file}"'}
+        | {"y": temp_output_file}
     )
     logger.info(
-        f"{_methods.CUT} {input_file.name} to {output_file.name} with {output_kwargs = }"
+        f"{_methods.CUT_SILENCE} {input_file.name} to {output_file.name} with {output_kwargs = }"
     )
     try:
         command: str = f"ffmpeg {_dic_to_ffmpeg_args(output_kwargs)}"
@@ -1105,7 +1101,7 @@ def _split_segments(  # command
     # Step 2: Use ffmpeg to cut the video into segments
     output_kwargs: dict = (
         {
-            "i": f'"{input_file}"',
+            "i": input_file,
             "c:v": "copy",
             "c:a": "copy",
             "f": "segment",
@@ -1114,7 +1110,7 @@ def _split_segments(  # command
             "reset_timestamps": "1",
         }
         | othertags
-        | {"y": f'"{output_dir}/%d_{input_file.stem}{input_file.suffix}"'}
+        | {"y": f"{output_dir}/%d_{input_file.stem}{input_file.suffix}"}
     )
     logger.info(f"Split {input_file.name} to {output_dir} with {output_kwargs = }")
     try:

@@ -1,8 +1,8 @@
-from app import VideoProcessorApp
+from app import LayoutApp
 
 
 def main() -> None:
-    app = VideoProcessorApp()
+    app = LayoutApp()
     app.run()
 
 

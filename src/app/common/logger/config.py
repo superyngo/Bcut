@@ -21,6 +21,7 @@ logging_config: dict[str, Any] = {
         },
     },
     "formatters": {
-        "formatter": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"}
+        # "formatter": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"}
+        "formatter": {"format": "%(asctime)s - %(levelname)s - %(message)s"}
     },
 }

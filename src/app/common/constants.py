@@ -30,6 +30,7 @@ runtime_pth = Path(os.path.abspath(sys.argv[0])).parent
 
 # set app base path
 class AppPaths(PathEnum):
+    USERPROFILE = Path(os.environ["USERPROFILE"])
     RUNTIME_PATH = runtime_pth
     PROGRAM_DATA = Path(os.environ["PROGRAMDATA"]) / APP_NAME  # C:\ProgramData
     APP_DATA = Path(os.environ["APPDATA"]) / APP_NAME  # C:\Users\user\AppData\Roaming

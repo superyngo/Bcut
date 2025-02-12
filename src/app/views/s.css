@@ -1,0 +1,75 @@
+
+/* style.css */
+Screen {
+    layout: horizontal;  /* Horizontal layout (left nav + main content) */
+    layers: base overlay;  /* Layer system */
+    overflow: hidden;    /* Prevent scrollbars */
+    background: $background;
+}
+
+/* Animated button hover effects */
+Button {
+    transition: background 300ms;
+}
+
+Button:hover {
+    background: $primary;
+    text-style: bold;
+}
+
+/* Progress bar customization */
+ProgressBar {
+    height: 1;
+    background: $surface;
+    color: $success;
+}
+
+ProgressBar > .progress-bar--bar {
+    background: $success;
+}
+
+/* Custom scrollbars */
+Log {
+    scrollbar-color: $accent;
+    scrollbar-color-active: $primary;
+    scrollbar-size-vertical: 1;
+}
+
+#drop-zone {
+    border: dashed gray;  /* Dashed border */
+    padding: 2;           /* 2 cells of padding */
+    margin: 1;            /* 1 cell margin */
+    /* min-height: 10;       Minimum height of 10 rows */
+}
+
+#video-info {
+    margin: 1;
+    padding: 1;
+    /* content-align: center middle;  Center content */
+}
+
+#main-content {
+    width: 3fr;
+    layout: vertical;
+    background: $surface;  /* Use theme surface color */
+}
+
+Navigator {
+    width: 1fr;
+    background: $panel;
+    padding: 1;
+    /* dock: left;          Dock to left side */
+}
+# 
+
+ProcessingForm {
+    height: 30%;         /* 30% of parent height */
+    border: solid $accent;  /* Border using accent color */
+    padding: 1;
+    margin: 1;
+}
+
+Log {
+    height: 20%;
+    background: $panel;
+}

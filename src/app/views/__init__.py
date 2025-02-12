@@ -1,3 +1,3 @@
-from .main import VideoProcessorApp
+from .main import LayoutApp
 
-__all__: list[str] = ["VideoProcessorApp"]
+__all__: list[str] = ["LayoutApp"]

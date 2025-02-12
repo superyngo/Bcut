@@ -9,7 +9,6 @@ constants.AppPaths.PROGRAM_DATA.mkdir(parents=True, exist_ok=True)
 constants.AppPaths.APP_DATA.mkdir(parents=True, exist_ok=True)
 # Create logger
 logger: Logger = setup_logger(constants.AppPaths.LOGS)
-logger.info(f"logs path in {constants.AppPaths.LOGS}")
 
 os.environ["HTTPS_PROXY"] = ""
 os.environ["HTTP_PROXY"] = ""

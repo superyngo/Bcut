@@ -1,12 +1,13 @@
 from math import e
 from pathlib import Path
 from app import constants
-from app import mideo_converter
+
+# from app import mideo_converter
 from app.services.ffmpeg_converter import ffmpeg_converter
 
 #
 
-file = Path(r"H:\Projects\Python\sample\2025-01-21_1737410559_merged_cut_sl.mp4")
+file = Path(r"H:\Projects\Python\sample\2025-01-20_1737324029_merged_cut.mkv")
 file2 = Path(
     r"H:\Projects\Python\sample\tt\cut_sl_speedup\2025-01-03_1735874716_merged_cut_sl_speedup.mkv"
 )
@@ -27,8 +28,8 @@ ffmpeg_converter._ffmpeg(
 ffmpeg_converter.cut_silence(
     file,
     None,
-    -15,
-    odd_args=ffmpeg_converter._create_speedup_args(2),
+    -15)
+    (odd_args=ffmpeg_converter._create_speedup_args(2),
     # even_args=ffmpeg_converter._create_speedup_args(10),
 )
 
