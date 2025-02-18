@@ -93,7 +93,6 @@ class SettingsScreen(Container):
 
 
 class VideoProcessorApp(App):
-    CSS_PATH = "s.css"
     TITLE = "Video Silence Remover"
 
     def __init__(self):

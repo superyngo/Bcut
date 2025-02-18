@@ -1,5 +1,5 @@
 # import ffmpeg
-from typing import Literal, OrderedDict, Sequence
+from typing import Sequence, Mapping
 from pathlib import Path
 from enum import StrEnum, auto
 from collections import deque
@@ -15,6 +15,7 @@ import json
 from decimal import Decimal, ROUND_CEILING
 from .types import EncodeKwargs, VideoSuffix
 from app.common import logger
+from itertools import chain
 
 
 class _methods(StrEnum):
@@ -35,15 +36,15 @@ class _methods(StrEnum):
 def _dic_to_ffmpeg_args(kwargs: dict | None = None) -> str:
     if kwargs is None:
         return ""
-    return " ".join(f"-{key} {value}" for key, value in kwargs.items())
+    return " ".join((f'-{k} "{v}"') if v != "" else f"-{k}" for k, v in kwargs.items())
 
 
 def _ffmpeg(**kwargs):
     default_kwargs = {"loglevel": "warning"}
-    output_kwargs: dict = kwargs
+    output_kwargs: dict = kwargs | default_kwargs
     logger.info(f"Executing FFmpeg with {output_kwargs = }")
-    command = ["ffmpeg"] + _dic_to_ffmpeg_args(kwargs | default_kwargs).split()
-    subprocess.run(command, check=True)
+    command = "ffmpeg " + _dic_to_ffmpeg_args(output_kwargs)
+    subprocess.run(command, check=True, encoding="utf-8")
 
 
 def _gen_filter(
@@ -60,10 +61,11 @@ def _gen_filter(
 
 
 def _ffprobe(**kwargs):
-    output_kwargs: dict = kwargs
+    default_kwargs = {}
+    output_kwargs: dict = kwargs | default_kwargs
     logger.info(f"Executing ffprobe with {output_kwargs = }")
-    command: str = f"ffprobe {_dic_to_ffmpeg_args(kwargs)}"
-    subprocess.run(command, shell=True, check=True)
+    command = "ffprobe " + _dic_to_ffmpeg_args(output_kwargs)
+    subprocess.run(command, shell=True, check=True, encoding="utf-8")
 
 
 def probe_duration(input_file: Path, **othertags) -> float:  # command
@@ -74,11 +76,14 @@ def probe_duration(input_file: Path, **othertags) -> float:  # command
         "i": input_file,
     } | othertags
     logger.info(f"Probing {input_file.name} duration with {output_kwargs = }")
-    command: str = f"ffprobe {_dic_to_ffmpeg_args(output_kwargs)}"
-    probe_duration = os.popen(command).read().strip()
+    command = "ffprobe " + _dic_to_ffmpeg_args(output_kwargs)
+    result = subprocess.run(
+        command, capture_output=True, text=True, check=True, encoding="utf-8"
+    )
+    probe_duration = result.stdout.strip()
     logger.info(f"{input_file.name} duration probed: {probe_duration}")
 
-    return float(probe_duration)
+    return float(probe_duration or 0)
 
 
 def probe_encoding(input_file: Path, **othertags) -> EncodeKwargs:  # command
@@ -91,9 +96,11 @@ def probe_encoding(input_file: Path, **othertags) -> EncodeKwargs:  # command
     } | othertags
     logger.info(f"Probing {input_file.name} encoding with {output_kwargs = }")
     # Probe the video file to get metadata
-    command: str = f"ffprobe {_dic_to_ffmpeg_args(output_kwargs)}"
-    probe = os.popen(command).read().encode("utf-8").decode("utf-8")
-    probe = json.loads(probe)
+    command = "ffprobe " + _dic_to_ffmpeg_args(output_kwargs)
+    result = subprocess.run(
+        command, capture_output=True, text=True, check=True, encoding="utf-8"
+    )
+    probe = json.loads(result.stdout)
 
     # Initialize the dictionary with default values
     encoding_info: EncodeKwargs = {}
@@ -143,6 +150,7 @@ def probe_non_silence(  # command
         {
             "i": input_file,
             "af": f"silencedetect=n={dB}dB:d={sl_duration}",
+            "c:v": "copy",
             "f": "null",
         }
         | othertags
@@ -153,8 +161,11 @@ def probe_non_silence(  # command
         f"Detecting silences of {input_file.name} by {dB = } and {output_kwargs = }"
     )
 
-    command: str = f"ffmpeg {_dic_to_ffmpeg_args(output_kwargs)}"
-    output = os.popen(command + " 2>&1").read()
+    command = "ffmpeg " + _dic_to_ffmpeg_args(output_kwargs)
+    result = subprocess.run(
+        command, capture_output=True, text=True, check=True, encoding="utf-8"
+    )
+    output = result.stdout + result.stderr
 
     # Total duration
     total_duration_pattern = r"Duration: (.+?),"
@@ -177,10 +188,10 @@ def probe_non_silence(  # command
 
     # Regular expression to find all floats after silence_duration: "
     silence_duration_pattern = r"silence_duration: ([0-9.]+)"
-    silence_duration_maches: list[str] = re.findall(silence_duration_pattern, output)
-    silence_duration_matches: Generator[float] = (
-        float(s) for s in silence_duration_maches
+    silence_duration_matches: list[str] | Generator[float] = re.findall(
+        silence_duration_pattern, output
     )
+    silence_duration_matches = (float(s) for s in silence_duration_matches)
     total_silence_duration: float = sum(silence_duration_matches)
 
     return (non_silence_segs, total_duration, total_silence_duration)
@@ -196,8 +207,10 @@ def probe_is_valid_video(input_file: Path, **othertags) -> bool:  # command
     } | othertags
     logger.info(f"Validating {input_file.name} with {output_kwargs = }")
     try:
-        command: str = f"ffprobe {_dic_to_ffmpeg_args(output_kwargs)}"
-        result = os.popen(command).read().strip()
+        command = "ffprobe " + _dic_to_ffmpeg_args(output_kwargs)
+        result = subprocess.run(
+            command, capture_output=True, text=True, check=True, encoding="utf-8"
+        ).stdout.strip()
         if result:
             message = f"Validated file: {input_file}, Status: Valid"
             logger.info(message)
@@ -221,9 +234,11 @@ def _probe_keyframe(input_file: Path, **othertags) -> list[float]:  # command
         "i": input_file,
     } | othertags
     logger.info(f"Getting keyframe for {input_file.name} with {output_kwargs = }")
-    command: str = f"ffprobe {_dic_to_ffmpeg_args(output_kwargs)}"
-    probe = os.popen(command).read().encode("utf-8").decode("utf-8")
-    probe = json.loads(probe)
+    command = "ffprobe " + _dic_to_ffmpeg_args(output_kwargs)
+    result = subprocess.run(
+        command, capture_output=True, text=True, check=True, encoding="utf-8"
+    )
+    probe = json.loads(result.stdout)
     keyframe_pts: list[float] = [
         float(packet["pts_time"])
         for packet in probe["packets"]
@@ -636,12 +651,12 @@ def _merge_overlapping_segments(segments: Sequence[float]) -> Sequence[float]:
 
 def _create_full_args(
     input_file: Path, output_file: Path | None = None, **othertags
-) -> dict[str, str]:
+) -> Mapping[str, str | Path]:
     if output_file is None:
         output_file = input_file.parent / (
             input_file.stem + "_" + _methods.CUT + input_file.suffix
         )
-    args: dict[str, str] = {"i": input_file} | othertags | {"y": output_file}
+    args: Mapping[str, str | Path] = {"i": input_file} | othertags | {"y": output_file}
     return args
 
 
@@ -1075,8 +1090,7 @@ def cut_silence_rerender(  # command
         f"{_methods.CUT_SILENCE} {input_file.name} to {output_file.name} with {output_kwargs = }"
     )
     try:
-        command: str = f"ffmpeg {_dic_to_ffmpeg_args(output_kwargs)}"
-        os.system(command)
+        _ffmpeg(**output_kwargs)
         os.remove(video_filter_script)
         os.remove(audio_filter_script)
         temp_output_file.replace(output_file)

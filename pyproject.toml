@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12.0"
 dependencies = [
+    "nuitka>=2.4.8",
     "textual>=0.83.0",
     "textual-fspicker>=0.0.11",
 ]

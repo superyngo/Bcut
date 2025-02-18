@@ -1,0 +1,1 @@
+uv run -m nuitka ./src/main_tui.py --company-name="Wenan" --product-name="Trimshh" --product-version="0.0.1" --standalone

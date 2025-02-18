@@ -102,10 +102,6 @@ MyModal{
     margin: 0 0 1 0;
 }
 
-.Margin_One_Right{
-    margin: 0 1 0 0;
-}
-
 .H_One_FR{
     width: 1fr;
 }
@@ -156,15 +152,6 @@ MyModal{
     display: none;
 }
 
-.ButtonA{
-    margin-right: 1;
-}
-
-
-.ButtonB{
-    margin-left: 1;
-}
-
 .Center_All {
     align: center middle;
     text-align: center;
@@ -184,16 +171,10 @@ MyModal{
     margin: 1;
 }
 
-.Rendering{
-    background: orange; 
-    text-style: bold;
-}
-
 .Done {
-    background: green; 
+    background: white; 
     text-style: bold; 
 }
-
 
 
 ListItem.--highlight {

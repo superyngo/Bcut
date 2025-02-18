@@ -96,6 +96,7 @@ name = "bcut"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "nuitka" },
     { name = "textual" },
     { name = "textual-fspicker" },
 ]
@@ -114,6 +115,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "nuitka", specifier = ">=2.4.8" },
     { name = "textual", specifier = ">=0.83.0" },
     { name = "textual-fspicker", specifier = ">=0.0.11" },
 ]
