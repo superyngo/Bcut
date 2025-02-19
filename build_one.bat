@@ -1,1 +1,1 @@
-uv run -m nuitka --onefile ./src/main_tui.py --output-filename=Trimshh --company-name="WENAN" --product-name="Trimshh" --product-version="0.1.0" --disable-cache=ccache --windows-icon-from-ico=favicon.ico
+uv run -m nuitka --onefile --onefile-no-compression ./src/main_tui.py --output-filename=Trimshh --company-name="WENANKO" --product-name="Trimshh" --product-version="0.1.0" --disable-cache=ccache --windows-icon-from-ico=favicon.ico
