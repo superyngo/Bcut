@@ -208,7 +208,7 @@ ListItem.--highlight {
 ABOUT_TEXT = f"""
 # About
 
-Welcome to **{constants.APP_NAME}**, the ultimate tool for automatically removing silent segments from videos. Whether you're editing podcasts, vlogs, lectures, or any other footage, this app helps you streamline your content by cutting out unnecessary pauses—saving you time and improving engagement.
+Welcome to **Trimshh**, the ultimate tool for automatically removing silent segments from videos. Whether you're editing podcasts, vlogs, lectures, or any other footage, this app helps you streamline your content by cutting out unnecessary pauses—saving you time and improving engagement.
 
 ### Key Features
 ✅ **Automatic Silence Detection** : Detects and removes silent parts with precision.  
@@ -217,66 +217,102 @@ Welcome to **{constants.APP_NAME}**, the ultimate tool for automatically removin
 ✅ **User-Friendly Interface** : Simple and intuitive design for easy operation.  
 ✅ **Batch Processing** : Edit multiple videos at once—perfect for podcasts or long recordings.  
 
-Built with efficiency in mind, **{constants.APP_NAME}** leverages the power of FFmpeg to ensure high-quality output while maintaining an intuitive user experience.
+Built with efficiency in mind, **Trimshh** leverages the power of FFmpeg to ensure high-quality output while maintaining an intuitive user experience.
 
-For support or feedback, feel free to reach out to **{constants.CONTACT_INFO.EMAIL}**.
-
+For support or feedback, feel free to reach out to **superyngo@gmail.com**.
 """
 
 LICENSE_TEXT = f"""
-# License Information
+**Trimshh End-User License Agreement (EULA)**  
 
-## Application License
-Copyright (c) 2025 {constants.AUTHOR}  
-  
-## Third-Party Licenses
-This application utilizes the following third-party software, each subject to their respective licenses:
+_Last Updated: 2025.2.18_  
 
-### FFmpeg (Win64 Binary)
-- **License:** LGPL v2.1 (for dynamically linked usage)
-- **Website:** [FFmpeg](https://ffmpeg.org)
-- **Binary Provider:** [GitHub - BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds)
+**IMPORTANT – READ CAREFULLY:**  
+This End-User License Agreement ("EULA") is a legal agreement between you (either an individual or a single entity) and WENA ("Licensor") for the software product "Trimshh" ("App"), including any associated media, printed materials, and online or electronic documentation. By installing, copying, or otherwise using the App, you agree to be bound by the terms of this EULA. If you do not agree to these terms, do not install or use the App.
 
-### Python Textual Package
-- **License:** MIT
-- **Repository:** [GitHub - Textualize/textual](https://github.com/Textualize/textual)
+---
 
-### Python textual_fspicker Package
-- **License:** MIT
-- **Repository:** [GitHub - Textualize/textual-fspicker](https://github.com/Textualize/textual-fspicker)
-- **Dependency:** Uses the Textual package
+### 1. GRANT OF LICENSE  
 
-### Python Rich Package
-- **License:** MIT
-- **Repository:** [GitHub - Textualize/rich](https://github.com/Textualize/rich)
-- **Included as part of Textual**
+Subject to the terms and conditions of this EULA, Licensor hereby grants you a non-exclusive, non-transferable license to install and use the App on any device that you own or control solely for your personal or internal business purposes.  
 
-### miek770/python_uv_nuitka_tui_template
-- **License:** MIT
-- **Repository:** [GitHub - miek770/python_uv_nuitka_tui_template](https://github.com/Textualize/textual)
-- **Dependency:** Used as a template for building
+---
 
-## Development and Compilation Tools
-The following tools are used for development and distribution but are not part of the final distributed application:
+### 2. RESTRICTIONS  
 
-- **uv** (Package Manager) - MIT License
-- **mypy** (Type Checking) - MIT License
-- **Nuitka** (Compilation to Win32 Binary) - Apache License 2.0
+You agree that you will not:  
+- Reverse engineer, decompile, disassemble, or otherwise attempt to discover the source code of the App, except to the extent expressly permitted by applicable law.  
+- Modify, or create derivative works based on, the App in whole or in part.  
+- Distribute, sell, lease, rent, sublicense, or otherwise transfer your rights under this EULA to any third party.  
+- Remove or obscure any proprietary notices or labels on the App.  
 
-## Disclaimer
-This software is distributed "as-is" without any warranties. The respective licenses of third-party software components apply independently. Ensure compliance with their terms when distributing or modifying this application.
+---
 
-For inquiries regarding licensing, please contact {constants.CONTACT_INFO.EMAIL}.
-"""
+### 3. THIRD-PARTY COMPONENTS  
 
-Utizied = """
-FFmpeg (Win64 Binary)
-Python Textual Package
-Python textual_fspicker Package
-Python Rich Package
-miek770/python_uv_nuitka_tui_template
-uv
-mypy
-Nuitka
-Inno Setup Compiler
+This App utilizes several third-party components that are subject to their own licenses. The licenses for these components govern your use of the respective components. Notable components include:  
+
+- **FFmpeg (Win64 Binary, compiled without GPL code):** Licensed under LGPL. Refer to the [FFmpeg website](https://ffmpeg.org/) for full details.  
+- **Python Textual Package:** Licensed under the MIT License.  
+- **Python textual_fspicker Package:** Licensed under the MIT License.  
+- **Python Rich Package:** Licensed under the MIT License.  
+- **miek770/python_uv_nuitka_tui_template:** Licensed under the MIT License.  
+- **uv:** Licensed under the MIT License.  
+- **mypy:** Licensed under the MIT License.  
+- **Nuitka:** Licensed under the Apache-2.0 License.  
+- **Inno Setup Compiler:** Distributed under the terms specified on the [Inno Setup website](http://www.jrsoftware.org/isinfo.php).  
+
+All third-party components remain the property of their respective authors and licensors. You should review the license terms of each component to ensure your compliance.  
+
+---
+
+### 4. DISTRIBUTION  
+
+This App is distributed exclusively via the Microsoft Store. Your use of the App is also subject to any additional terms and conditions imposed by Microsoft.  
+
+---
+
+### 5. UPDATES AND SUPPORT  
+
+Licensor may, at its discretion, provide updates, patches, or modifications to the App exclusively through the Microsoft Store. No direct support is provided by Licensor. For any issues, users should refer to available online resources and community forums or submit feedback via the Microsoft Store as applicable.  
+
+---
+
+### 6. DISCLAIMER OF WARRANTIES  
+
+THE APP IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. LICENSOR DOES NOT WARRANT THAT THE APP WILL MEET YOUR REQUIREMENTS OR THAT ITS OPERATION WILL BE UNINTERRUPTED OR ERROR-FREE.  
+
+---
+
+### 7. LIMITATION OF LIABILITY  
+
+IN NO EVENT SHALL LICENSOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF PROFITS, DATA, OR OTHER INTANGIBLE LOSSES) ARISING OUT OF OR IN CONNECTION WITH THE USE OR INABILITY TO USE THE APP, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.  
+
+---
+
+### 8. TERMINATION  
+
+This EULA is effective until terminated. Your rights under this EULA will terminate automatically without notice if you fail to comply with any term(s) of this agreement. Upon termination, you must cease all use of the App and destroy all copies in your possession.  
+
+---
+
+### 9. GOVERNING LAW  
+
+This EULA shall be governed by and construed in accordance with the laws of Taiwan. Any disputes arising under or in connection with this EULA shall be subject to the exclusive jurisdiction of the courts located in Taiwan.  
+
+---
+
+### 10. ENTIRE AGREEMENT  
+
+This EULA constitutes the entire agreement between you and Licensor regarding the use of the App and supersedes all prior or contemporaneous understandings or agreements, whether written or oral, regarding such subject matter.  
+
+---
+
+**By installing or using Trimshh, you acknowledge that you have read, understood, and agree to be bound by the terms and conditions of this EULA.**  
+
+For any questions regarding this license, please contact:  
+📧 **superyngo@gmail.com**  
+🏢 **WENA** (Company name pending registration)  
+
+---
 """

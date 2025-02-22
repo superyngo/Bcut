@@ -12,7 +12,7 @@ from textual.containers import (
 )
 from textual.css.query import NoMatches
 from textual.reactive import reactive
-from textual.events import Key, Click, MouseDown
+from textual.events import Key, Click
 from textual.widget import Widget
 from textual.widgets import (
     Header,
@@ -38,10 +38,10 @@ import app.services.ffmpeg_converter.ffmpeg_converter as ffmpeg_converter
 import threading
 import time
 import re
-from .src import CSS
+from .src import CSS, LICENSE_TEXT, ABOUT_TEXT
 
-LICENSE_TEXT = Path("LICENSE").read_text(encoding="utf-8")
-ABOUT_TEXT = Path("ABOUT.md").read_text(encoding="utf-8")
+# LICENSE_TEXT = Path("LICENSE").read_text(encoding="utf-8")
+# ABOUT_TEXT = Path("ABOUT.md").read_text(encoding="utf-8")
 
 probed_cache: dict[str, str] = {}
 # Define the About text using Markdown
