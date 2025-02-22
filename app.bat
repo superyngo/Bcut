@@ -1,1 +1,1 @@
-uv run textual run ./src/main_tui.py --dev
+uv run textual run main.py --dev
