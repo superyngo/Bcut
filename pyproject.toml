@@ -13,6 +13,7 @@ dependencies = [
 [tool.uv]
 dev-dependencies = [
     "black>=24.10.0",
+    "imageio>=2.37.0",
     "mypy>=1.14.1",
     "nuitka>=2.4.8",
     "pre-commit>=4.0.1",
