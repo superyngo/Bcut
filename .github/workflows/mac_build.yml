@@ -17,7 +17,7 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   build:
-    runs-on: windows-latest
+    runs-on: macos-latest
 
     steps:
 
@@ -51,7 +51,7 @@ jobs:
           company-name: WENANKO
           product-name: Trimshh
           product-version: 0.1.1
-          windows-icon-from-ico: favicon.ico
+          macos-app-icon: favicon.ico
           output-filename: Trimshh
 
       # Uploads artifact
