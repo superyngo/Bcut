@@ -36,12 +36,13 @@ jobs:
             **/requirements*.txt
 
       - name: Install Dependencies
-      run: |
-        pip install -r requirements.txt -r requirements-dev.txt
+        run: |
+          pip install -r requirements.txt -r requirements-dev.txt
 
 
       # Build python script into a single execute or app folder (macOS)
-      - uses: Nuitka/Nuitka-Action@main
+      - name: Build Executable
+        uses: Nuitka/Nuitka-Action@main
         with:
           nuitka-version: main
           script-name: './src/main_tui.py'
