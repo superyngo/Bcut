@@ -46,7 +46,7 @@ jobs:
         with:
           nuitka-version: main
           script-name: './src/main_tui.py'
-          mode: standalone
+          mode: app
           msvc: latest
           company-name: WENANKO
           product-name: Trimshh
