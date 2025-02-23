@@ -36,11 +36,13 @@ jobs:
           nuitka-version: main
           script-name: main.py
           mode: app
+          onefile: true
+          onefile-no-compression: true
 
       # Uploads artifact
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: exe
-          path: build/*.exe
+          path: build/*.*
           include-hidden-files: true
