@@ -41,7 +41,7 @@ def _dic_to_ffmpeg_args(kwargs: dict | None = None) -> str:
 
 def _ffmpeg(**kwargs):
     default_kwargs = {"loglevel": "warning"}
-    output_kwargs: dict = kwargs | default_kwargs
+    output_kwargs: dict = {"hwaccel": "auto"} | kwargs | default_kwargs
     logger.info(f"Executing FFmpeg with {output_kwargs = }")
     command = "ffmpeg " + _dic_to_ffmpeg_args(output_kwargs)
     subprocess.run(command, check=True, encoding="utf-8")
@@ -148,6 +148,7 @@ def probe_non_silence(  # command
     """
     output_kwargs: dict = (
         {
+            "hwaccel": "auto",
             "i": input_file,
             "af": f"silencedetect=n={dB}dB:d={sl_duration}",
             "c:v": "copy",
